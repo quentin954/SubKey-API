@@ -1,10 +1,32 @@
 const userService = require('../services/userService');
 
-exports.getAllUsers = async (req, res) => {
+const register = async (req, res) => {
+    const { username, password, email, subscriptionKey } = req.body;
+
     try {
-        const users = await userService.getAllUsers();
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: 'Failed to fetch users', details: err.message });
+        if (!username || !password || !email || !subscriptionKey) {
+            return res.status(400).json({
+                success: false,
+                message: 'All fields (username, password, email, subscriptionKey) are required.'
+            });
+        }
+
+        const result = await userService.registerUser({ username, password, email, subscriptionKey });
+
+        res.status(201).json({
+            success: true,
+            message: 'User registered successfully!',
+            user: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Failed to register user.',
+            details: error.message
+        });
     }
+};
+
+module.exports = {
+    register
 };
