@@ -1,7 +1,6 @@
 const express = require('express');
-const { initializeSession } = require('../controllers/sessionController');
-
 const router = express.Router();
+const { initializeSession } = require('../controllers/sessionController');
 
 router.post('/init', initializeSession);
 
