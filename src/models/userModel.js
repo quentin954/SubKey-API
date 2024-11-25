@@ -22,6 +22,17 @@ const User = {
         }
     },
 
+    getByUsername: async (username) => {
+        const query = `SELECT * FROM users WHERE username = $1 LIMIT 1;`;
+        try {
+            const result = await db.query(query, [username]);
+            return result.rows[0] || null;
+        } catch (error) {
+            console.error(`Error fetching user by username: ${error.message}`);
+            throw new Error('Database query failed while fetching user.');
+        }
+    },
+
     create: async ({ username, email, password }) => {
         if (!username || !email || !password) {
             throw new Error('Username, email, and password are required to create a user.');

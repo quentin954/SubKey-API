@@ -70,3 +70,7 @@ CREATE TABLE "user_roles" (
     FOREIGN KEY ("role_id") REFERENCES "roles"("role_id") ON DELETE CASCADE,
     UNIQUE ("user_id", "role_id")
 );
+
+INSERT INTO "roles" ("role_name", "power") VALUES ('Admin', 100);
+
+INSERT INTO "user_roles" ("user_id", "role_id") SELECT u."user_id", r."role_id" FROM "users" u JOIN "roles" r ON r."role_name" = 'Admin' WHERE u."username" = 'john_doe';
