@@ -7,14 +7,21 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 
 const sessionValidator = require('./middlewares/sessionValidator');
+const { isAuthenticated, isAdmin } = require('./middlewares/authMiddleware');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
+
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+    console.error("Error: JWT_SECRET is not specified! The application cannot start without it.");
+    process.exit(1);
+}
 
 const app = express();
 app.use(express.json());
 
 // API Routes
-app.use('/api/users', sessionValidator, userRoutes);
-app.use('/api/admin', adminRoutes); // add isAdmin middleware
+app.use('/api/users', /*sessionValidator,*/ userRoutes);
+app.use('/api/admin', isAuthenticated, isAdmin, adminRoutes);
 app.use('/api/session', sessionRoutes);
 
 // Default Endpoint
