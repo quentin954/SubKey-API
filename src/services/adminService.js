@@ -3,6 +3,7 @@ const Key = require('../models/keyModel');
 const Product = require('../models/productModel');
 const Status = require('../models/statusModel');
 const ProductStatus = require('../models/productStatusModel');
+const UserProduct = require('../models/userProductModel');
 
 const createKey = async (productName, durationSeconds) => {
     try {
@@ -56,8 +57,54 @@ const createProductStatus = async ({ statusName, description, isActive }) => {
     }
 };
 
+const pauseProduct = async (productName, statusName) => {
+    try {
+        const status = await ProductStatus.getStatusByName(statusName);
+        if (!status || status.is_active) {
+            throw new Error('Invalid statusName. The provided status must have is_active set to false.');
+        }
+
+        const product = await Product.getProductByName(productName);
+        if (!product) {
+            throw new Error(`Product with name "${productName}" not found.`);
+        }
+
+        await ProductStatus.updateProductStatus(product.product_id, status.status_id);
+
+        await UserProduct.pauseAllUsersByProductId(product.product_id);
+
+        return { message: `Product "${productName}" has been paused with status "${statusName}", and user subscriptions have been paused.` };
+    } catch (error) {
+        throw new Error('Error pausing product: ' + error.message);
+    }
+};
+
+const resumeProduct = async (productName, statusName) => {
+    try {
+        const status = await ProductStatus.getStatusByName(statusName);
+        if (!status || !status.is_active) {
+            throw new Error('Invalid statusName. The provided status must have is_active set to true.');
+        }
+
+        const product = await Product.getProductByName(productName);
+        if (!product) {
+            throw new Error(`Product with name "${productName}" not found.`);
+        }
+
+        await ProductStatus.updateProductStatus(product.product_id, status.status_id);
+
+        await UserProduct.resumeAllUsersByProductId(product.product_id);
+
+        return { message: `Product "${productName}" has been resumed with status "${statusName}", and user subscriptions have been resumed.` };
+    } catch (error) {
+        throw new Error('Error resuming product: ' + error.message);
+    }
+};
+
 module.exports = {
     createKey,
     createProduct,
-    createProductStatus
+    createProductStatus,
+    pauseProduct,
+    resumeProduct
 };

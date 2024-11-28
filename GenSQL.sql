@@ -71,6 +71,13 @@ CREATE TABLE "user_roles" (
     UNIQUE ("user_id", "role_id")
 );
 
+INSERT INTO "product_status" ("status_name", "is_active")
+VALUES 
+    ('Operational', TRUE),
+    ('Use at own Risk', TRUE),
+    ('Updating', FALSE),
+    ('Detected', FALSE);
+
 INSERT INTO "roles" ("role_name", "power") VALUES ('Admin', 100);
 
 INSERT INTO "user_roles" ("user_id", "role_id") SELECT u."user_id", r."role_id" FROM "users" u JOIN "roles" r ON r."role_name" = 'Admin' WHERE u."username" = 'john_doe';
