@@ -27,7 +27,23 @@ const ProductStatus = {
             console.error(`Error fetching product status by name: ${error.message}`, { statusName });
             throw new Error('Database query failed while fetching product status by name.');
         }
-    }
+    },
+
+    updateProductStatus: async (productId, statusId) => {
+        const query = `
+            UPDATE products
+            SET status_id = $1
+            WHERE product_id = $2;
+        `;
+        const values = [statusId, productId];
+    
+        try {
+            await db.query(query, values);
+        } catch (error) {
+            console.error(`Error updating status for product ID ${productId} with status ID ${statusId}:`, error.message);
+            throw new Error('Database query failed while updating product status.');
+        }
+    },    
 };
 
 module.exports = ProductStatus;

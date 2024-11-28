@@ -86,6 +86,40 @@ const UserProduct = {
             throw new Error('Database query failed while updating subscription expiry.');
         }
     },
+
+    pauseAllUsersByProductId: async (productId) => {
+        const query = `
+            UPDATE user_products
+            SET is_paused = TRUE, paused_at = CURRENT_TIMESTAMP
+            WHERE product_id = $1 AND is_paused = FALSE;
+        `;
+        const values = [productId];
+    
+        try {
+            await db.query(query, values);
+        } catch (error) {
+            console.error(`Error pausing subscriptions for product ID ${productId}:`, error.message);
+            throw new Error('Database query failed while pausing subscriptions.');
+        }
+    },
+
+    resumeAllUsersByProductId: async (productId) => {
+        const query = `
+            UPDATE user_products
+            SET is_paused = FALSE, paused_at = NULL, 
+                expiry_date = (CURRENT_TIMESTAMP + (expiry_date - paused_at)) -- Compensate the paused time
+            WHERE product_id = $1 AND is_paused = TRUE;
+        `;
+        const values = [productId];
+
+        try {
+            await db.query(query, values);
+        } catch (error) {
+            console.error('Error resuming all user subscriptions:', error.message);
+            throw new Error('Database query failed while resuming all user subscriptions.');
+        }
+    },
+    
 };
 
 module.exports = UserProduct;

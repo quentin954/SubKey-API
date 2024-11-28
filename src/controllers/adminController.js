@@ -72,8 +72,56 @@ const createProductStatus = async (req, res) => {
     }
 };
 
+const pauseProduct = async (req, res) => {
+    const { productName, statusName } = req.body;
+
+    if (!productName || !statusName) {
+        return res.status(400).json({ success: false, message: 'productName and statusName are required.' });
+    }
+
+    try {
+        const result = await ProductService.pauseProduct(productName, statusName);
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+        });
+    } catch (error) {
+        console.error('Error pausing product:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to pause product.',
+            details: error.message
+        });
+    }
+};
+
+const resumeProduct = async (req, res) => {
+    const { productName, statusName } = req.body;
+
+    if (!productName || !statusName) {
+        return res.status(400).json({ success: false, message: 'productName and statusName are required.' });
+    }
+
+    try {
+        const result = await adminService.resumeProduct(productName, statusName);
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+        });
+    } catch (error) {
+        console.error('Error resuming product:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to resume product.',
+            details: error.message
+        });
+    }
+};
+
 module.exports = {
     createKey,
     createProduct,
-    createProductStatus
+    createProductStatus,
+    pauseProduct,
+    resumeProduct
 };
