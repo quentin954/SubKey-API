@@ -53,6 +53,21 @@ const User = {
             throw new Error('Database query failed while creating user.');
         }
     },
+
+    getAllUsers: async () => {
+        const query = `
+            SELECT user_id, username, email, hardware_id, last_login, created_at
+            FROM users;
+        `;
+
+        try {
+            const result = await db.query(query);
+            return result.rows;
+        } catch (error) {
+            console.error(`Error fetching all users: ${error.message}`);
+            throw new Error('Database query failed while fetching all users.');
+        }
+    }
 };
 
 module.exports = User;

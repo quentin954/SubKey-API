@@ -59,6 +59,24 @@ const Key = {
             console.error(`Error creating key: ${error.message}`, { productKey, productId, durationSeconds });
             throw new Error('Database query failed while creating key.');
         }
+    },
+
+    updateKeyBanStatus: async (keyId) => {
+        const query = `
+            UPDATE "keys"
+            SET "is_banned" = TRUE
+            WHERE "key_id" = $1
+            RETURNING *;
+        `;
+        const values = [keyId];
+
+        try {
+            const result = await db.query(query, values);
+            return result.rows[0];
+        } catch (error) {
+            console.error(`Error banning key with key_id "${keyId}":`, error.message);
+            throw new Error('Database query failed while banning key.');
+        }
     }
 };
 

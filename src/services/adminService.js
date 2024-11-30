@@ -1,9 +1,11 @@
 const crypto = require('crypto');
+const User = require('../models/userModel');
 const Key = require('../models/keyModel');
 const Product = require('../models/productModel');
 const Status = require('../models/statusModel');
 const ProductStatus = require('../models/productStatusModel');
 const UserProduct = require('../models/userProductModel');
+const UserBan = require('../models/userBanModel');
 
 const createKey = async (productName, durationSeconds) => {
     try {
@@ -101,10 +103,82 @@ const resumeProduct = async (productName, statusName) => {
     }
 };
 
+const banKey = async (productKey) => {
+    try {
+        const key = await Key.getActiveKey(productKey);
+        if (!key) {
+            throw new Error(`Key "${productKey}" not found.`);
+        }
+
+        const keyId = key.key_id;
+
+        const updatedKey = await Key.updateKeyBanStatus(keyId);
+        
+        return updatedKey;
+    } catch (error) {
+        throw new Error('Error banning key: ' + error.message);
+    }
+};
+
+const banUser = async (username, bannedBy, banDurationInSeconds = 0, reason = null) => {
+    try {
+        if (!username || !bannedBy) {
+            throw new Error('Missing required parameters: username, bannedBy.');
+        }
+        
+        const user = await User.getByUsername(username);
+        if (!user) {
+            throw new Error(`User with username "${username}" not found.`);
+        }
+
+        const userId = user.user_id;
+
+        const activeBan = await UserBan.getActiveBanByUserId(userId);
+        if (activeBan) {
+            throw new Error('This user is already banned or has an active ban.');
+        }
+
+        const banDetails = await UserBan.banUser({
+            userId,
+            bannedBy,
+            banDurationInSeconds,
+            reason
+        });
+
+        return banDetails;
+    } catch (error) {
+        throw new Error('Error banning user: ' + error.message);
+    }
+};
+
+const unbanUser = async (username) => {
+    try {
+        const user = await User.getByUsername(username);
+        if (!user) {
+            throw new Error(`User with username "${username}" not found.`);
+        }
+
+        const userId = user.user_id;
+
+        const activeBan = await UserBan.getActiveBanByUserId(userId);
+        if (!activeBan) {
+            throw new Error('No active ban found for this user.');
+        }
+
+        const unbannedUser = await UserBan.unbanUser(userId);
+        return unbannedUser;
+    } catch (error) {
+        throw new Error('Error unbanning user: ' + error.message);
+    }
+};
+
 module.exports = {
     createKey,
     createProduct,
     createProductStatus,
     pauseProduct,
-    resumeProduct
+    resumeProduct,
+    banKey,
+    banUser,
+    unbanUser
 };
