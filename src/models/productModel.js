@@ -35,6 +35,22 @@ const Product = {
             throw new Error('Database query failed while fetching product by name.');
         }
     },
+
+    getAllProductsWithStatus: async () => {
+        const query = `
+            SELECT p.product_name, ps.status_name
+            FROM products p
+            JOIN product_status ps ON p.status_id = ps.status_id;
+        `;
+
+        try {
+            const result = await db.query(query);
+            return result.rows;
+        } catch (error) {
+            console.error('Error fetching products with status:', error.message);
+            throw new Error('Database query failed.');
+        }
+    },
 };
 
 module.exports = Product;

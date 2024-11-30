@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const User = require('../models/userModel');
 const Key = require('../models/keyModel');
 const UserProduct = require('../models/userProductModel');
+const UserBan = require('../models/userBanModel');
 const { generateToken } = require('../utils/jwtHelper');
 const { addDurationToDate } = require('../utils/dateUtils');
 
@@ -52,6 +53,12 @@ const loginUser = async (username, password) => {
         if (!user) {
             throw new Error('Invalid username or password.');
         }
+
+        const activeBan = await UserBan.getActiveBanByUserId(user.user_id);
+        if (activeBan) {
+            const banMessage = activeBan.reason ? `You are banned from the platform. Reason: ${activeBan.reason}` : 'You are banned from the platform.';
+            throw new Error(banMessage);
+        }        
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {

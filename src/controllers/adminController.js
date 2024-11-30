@@ -80,7 +80,7 @@ const pauseProduct = async (req, res) => {
     }
 
     try {
-        const result = await ProductService.pauseProduct(productName, statusName);
+        const result = await adminService.pauseProduct(productName, statusName);
         return res.status(200).json({
             success: true,
             message: result.message,
@@ -118,10 +118,99 @@ const resumeProduct = async (req, res) => {
     }
 };
 
+const banKey = async (req, res) => {
+    const { productKey } = req.body;
+
+    if (!productKey) {
+        return res.status(400).json({
+            success: false,
+            message: 'Product key is required.'
+        });
+    }
+
+    try {
+        const result = await adminService.banKey(productKey);
+        
+        res.status(200).json({
+            success: true,
+            message: `Key "${productKey}" has been banned successfully.`,
+            result
+        });
+    } catch (error) {
+        console.error('Error banning key:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to ban the key.',
+            details: error.message
+        });
+    }
+};
+
+const banUser = async (req, res) => {
+    const { username, banDurationInSeconds = 0, reason = null } = req.body;
+
+    if (!username) {
+        return res.status(400).json({
+            success: false,
+            message: 'The username is required.'
+        });
+    }
+
+    try {
+        const bannedBy = req.user.user_id;
+        
+        const banDetails = await adminService.banUser(username, bannedBy, banDurationInSeconds, reason);
+        
+        return res.status(200).json({
+            success: true,
+            message: `User with username "${username}" has been banned successfully.`,
+            banDetails
+        });
+    } catch (error) {
+        console.error('Error banning user:', error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to ban the user.',
+            details: error.message
+        });
+    }
+};
+
+const unbanUser = async (req, res) => {
+    const { username } = req.params;
+
+    if (!username) {
+        return res.status(400).json({
+            success: false,
+            message: 'Username is required.',
+        });
+    }
+
+    try {
+        const unbannedUser = await adminService.unbanUser(username);
+        
+        return res.status(200).json({
+            success: true,
+            message: `User with username "${username}" has been unbanned successfully.`,
+            unbannedUser,
+        });
+    } catch (error) {
+        console.error('Error unbanning user:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to unban user.',
+            details: error.message,
+        });
+    }
+};
+
 module.exports = {
     createKey,
     createProduct,
     createProductStatus,
     pauseProduct,
-    resumeProduct
+    resumeProduct,
+    banKey,
+    banUser,
+    unbanUser
 };

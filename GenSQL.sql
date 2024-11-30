@@ -1,3 +1,4 @@
+DROP TABLE IF EXISTS "user_bans" CASCADE;
 DROP TABLE IF EXISTS "user_roles" CASCADE;
 DROP TABLE IF EXISTS "roles" CASCADE;
 DROP TABLE IF EXISTS "user_products" CASCADE;
@@ -12,8 +13,8 @@ CREATE TABLE "users" (
     "password" VARCHAR(255) NOT NULL,
     "email" VARCHAR(100) NOT NULL UNIQUE,
     "hardware_id" VARCHAR(255),
-    "last_login" TIMESTAMP DEFAULT NULL,
-    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    "last_login" TIMESTAMPTZ DEFAULT NULL,
+    "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE "product_status" (
@@ -27,7 +28,7 @@ CREATE TABLE "products" (
     "product_id" SERIAL PRIMARY KEY,
     "product_name" VARCHAR(100) NOT NULL UNIQUE,
     "status_id" INT NOT NULL,
-    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("status_id") REFERENCES "product_status"("status_id")
 );
 
@@ -38,7 +39,7 @@ CREATE TABLE "keys" (
     "duration_seconds" INT NOT NULL,
     "is_active" BOOLEAN DEFAULT TRUE,
     "is_banned" BOOLEAN DEFAULT FALSE,
-    "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY ("product_id") REFERENCES "products"("product_id") ON DELETE CASCADE
 );
 
@@ -47,10 +48,10 @@ CREATE TABLE "user_products" (
     "user_id" INT NOT NULL,
     "product_id" INT NOT NULL,
     "key_id" INT NOT NULL,
-    "activation_date" TIMESTAMP DEFAULT NULL,
-    "expiry_date" TIMESTAMP NOT NULL,
+    "activation_date" TIMESTAMPTZ DEFAULT NULL,
+    "expiry_date" TIMESTAMPTZ NOT NULL,
     "is_paused" BOOLEAN DEFAULT FALSE,
-    "paused_at" TIMESTAMP DEFAULT NULL,
+    "paused_at" TIMESTAMPTZ DEFAULT NULL,
     FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE CASCADE,
     FOREIGN KEY ("product_id") REFERENCES "products"("product_id") ON DELETE CASCADE,
     FOREIGN KEY ("key_id") REFERENCES "keys"("key_id") ON DELETE CASCADE
@@ -71,13 +72,17 @@ CREATE TABLE "user_roles" (
     UNIQUE ("user_id", "role_id")
 );
 
-INSERT INTO "product_status" ("status_name", "is_active")
-VALUES 
-    ('Operational', TRUE),
-    ('Use at own Risk', TRUE),
-    ('Updating', FALSE),
-    ('Detected', FALSE);
+CREATE TABLE "user_bans" (
+    "ban_id" SERIAL PRIMARY KEY,
+    "user_id" INT NOT NULL,
+    "banned_by" INT NOT NULL,
+    "ban_start" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    "ban_end" TIMESTAMPTZ,
+    "reason" TEXT NULL,
+    "is_active" BOOLEAN NOT NULL DEFAULT TRUE,
+    "updated_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE CASCADE,
+    FOREIGN KEY ("banned_by") REFERENCES "users"("user_id") ON DELETE CASCADE
+);
 
-INSERT INTO "roles" ("role_name", "power") VALUES ('Admin', 100);
-
-INSERT INTO "user_roles" ("user_id", "role_id") SELECT u."user_id", r."role_id" FROM "users" u JOIN "roles" r ON r."role_name" = 'Admin' WHERE u."username" = 'john_doe';
+CREATE UNIQUE INDEX unique_active_ban_idx ON "user_bans" ("user_id") WHERE "is_active" = TRUE;

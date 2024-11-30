@@ -5,10 +5,13 @@ const path = require('path');
 const userRoutes = require('./routes/userRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const productRoutes = require('./routes/productRoutes');
 
 const sessionValidator = require('./middlewares/sessionValidator');
 const { isAuthenticated, isAdmin } = require('./middlewares/authMiddleware');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
+
+const initializeEssentialData = require('./scripts/dbInitializer');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
@@ -23,6 +26,7 @@ app.use(express.json());
 app.use('/api/users', /*sessionValidator,*/ userRoutes);
 app.use('/api/admin', isAuthenticated, isAdmin, adminRoutes);
 app.use('/api/session', sessionRoutes);
+app.use('/api/products', productRoutes);
 
 // Default Endpoint
 app.get('/', (req, res) => {
@@ -33,8 +37,11 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+(async () => {
+    await initializeEssentialData();
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+})();
 
 module.exports = app;
