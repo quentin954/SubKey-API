@@ -10,6 +10,8 @@ const productRoutes = require('./routes/productRoutes');
 const sessionValidator = require('./middlewares/sessionValidator');
 const { isAuthenticated, isAdmin } = require('./middlewares/authMiddleware');
 const { errorHandler, notFoundHandler } = require('./middlewares/errorHandler');
+const ipLogger = require('./middlewares/ipLogger');
+const clearContextMiddleware = require('./middlewares/clearContextMiddleware');
 
 const initializeEssentialData = require('./scripts/dbInitializer');
 
@@ -21,6 +23,8 @@ if (!JWT_SECRET) {
 
 const app = express();
 app.use(express.json());
+app.use(ipLogger);
+app.use(clearContextMiddleware);
 
 // API Routes
 app.use('/api/users', /*sessionValidator,*/ userRoutes);
