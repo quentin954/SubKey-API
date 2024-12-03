@@ -85,4 +85,14 @@ CREATE TABLE "user_bans" (
     FOREIGN KEY ("banned_by") REFERENCES "users"("user_id") ON DELETE CASCADE
 );
 
+CREATE TABLE "action_logs" (
+    "log_id" SERIAL PRIMARY KEY,
+    "user_id" INT NULL,
+    "action" VARCHAR(255) NOT NULL,
+    "details" JSONB DEFAULT NULL,
+    "ip_address" VARCHAR(45) DEFAULT NULL,
+    "created_at" TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY ("user_id") REFERENCES "users"("user_id") ON DELETE SET NULL
+);
+
 CREATE UNIQUE INDEX unique_active_ban_idx ON "user_bans" ("user_id") WHERE "is_active" = TRUE;
